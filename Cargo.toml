@@ -7,5 +7,5 @@ edition = "2021"
 
 [dependencies]
 axum = "0.6.1"
-tokio = { version = "1.23.0", features = ["full"] }
+tokio = { version = "1.23.0", features = ["full", "macros", "rt-multi-thread"] }
 tower = { version = "0.4.13", features = ["timeout"] }
