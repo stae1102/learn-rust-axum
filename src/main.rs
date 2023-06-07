@@ -1,6 +1,8 @@
+use std::net::SocketAddr;
+
 use axum::{
     routing::get,
-    response::{Json, Html},
+    response::{Html},
     Router,
 };
 
@@ -11,7 +13,10 @@ async fn main() {
         get(|| async { Html("Hello <strong>World!!!</strong>") }),
     );
 
-    axum::Server::bind(&"127.0.0.1:8000".parse().unwrap())
+    // region:      --- Start Server
+    let addr = SocketAddr::from(([127, 0, 0, 1], 8000));
+    println!("->> LISTENING on {addr}\n");
+    axum::Server::bind(&addr)
         .serve(routes_hello.into_make_service())
         .await
         .unwrap();
