@@ -12,22 +12,25 @@ use tower_cookies::CookieManagerLayer;
 use tower_http::services::ServeDir;
 
 mod error;
+mod model;
 mod web;
 
+// main 함수는 async를 붙일 수 없으나, tokio macro를 통해 사용 가능
 #[tokio::main]
 async fn main() {
+    // 라우터를 생성
     let routes_all: Router = Router::new()
-        .merge(routes_hello())
-        .merge(web::routes_login::routes())
-        .layer(middleware::map_response(main_response_mapper))
-        .layer(CookieManagerLayer::new())
-        .fallback_service(routes_static());
+        .merge(routes_hello()) // 라우터 병합으로, 여러 개의 라우터를 하나의 라우터로 병합해서 사용
+        .merge(web::routes_login::routes()) // 외부 크레이트에서 로그인 하는 라우트 병합
+        .layer(middleware::map_response(main_response_mapper)) // middleware로 mapper를 두어서 응답 매핑
+        .layer(CookieManagerLayer::new()) // 쿠키 매니저 사용
+        .fallback_service(routes_static()); // 오류 발생 시 보여주는 정적 라우트
 
     // region:      --- Start Server
-    let addr = SocketAddr::from(([127, 0, 0, 1], 8001));
+    let addr: SocketAddr = SocketAddr::from(([127, 0, 0, 1], 8001)); // 127.0.0.1:8001에서 서버 구동할 수 있게 주소 열거체 생성
     println!("->> LISTENING on {addr}\n");
     axum::Server::bind(&addr)
-        .serve(routes_all.into_make_service())
+        .serve(routes_all.into_make_service()) // 라우트를 사용
         .await
         .unwrap();
 }
@@ -51,7 +54,7 @@ fn routes_hello() -> Router {
 }
 
 #[derive(Debug, Deserialize)]
-struct HelloParams {
+struct HelloParams { // query 사용을 위해 구조체 사용
     name: Option<String>,
 }
 
@@ -60,7 +63,7 @@ async fn handler_hello(Query(params): Query<HelloParams>) -> impl IntoResponse {
     println!("->> {:<12} - handler_hello - {params:?}", "HANDLER");
 
     let name: &str = params.name.as_deref().unwrap_or("World!");
-    Html(format!("Hello <strong>{name}</strong>"))
+    Html(format!("Hello <strong>{name}</strong>")) // name이 없으면 "World!" 출력
 }
 
 // e.g., `/hello2/Seongtae`
