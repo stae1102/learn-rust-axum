@@ -23,7 +23,7 @@ async fn api_login(cookies: Cookies, payload: Json<LoginPayload>) -> Result<Json
     cookies.add(Cookie::new(AUTH_TOKEN, "user-1.exp.sign"));
 
     // Create the success body.
-    let body = Json(json!({
+    let body: Json<Value> = Json(json!({
         "result": {
             "success": true
         }
@@ -33,6 +33,7 @@ async fn api_login(cookies: Cookies, payload: Json<LoginPayload>) -> Result<Json
 }
 
 #[derive(Debug, Deserialize)]
+// 로그인 요청 페이로드에 대한 구조체
 struct LoginPayload {
     username: String,
     pwd: String,

@@ -32,9 +32,12 @@ async fn main() {
     axum::Server::bind(&addr)
         .serve(routes_all.into_make_service()) // 라우트를 사용
         .await
-        .unwrap();
+        .unwrap(); // Option, Result 내부 값을 가져옴
 }
 
+// 응답에 대한 매퍼
+// Response를 인자로 받아서, print 후 Response 반환.
+// 그대로 소유권을 반환하기 때문에 인자로 소유권이 있는 Response 구조체를 인자로 사용
 async fn main_response_mapper(res: Response) -> Response {
     println!("->> {:<12} - main_response_mapper", "RES_MAPPER");
 
@@ -42,6 +45,7 @@ async fn main_response_mapper(res: Response) -> Response {
     res
 }
 
+// fallback에 대하여 오류를 처리함
 fn routes_static() -> Router {
     Router::new().nest_service("/", get_service(ServeDir::new("./")))
 }
@@ -54,6 +58,8 @@ fn routes_hello() -> Router {
 }
 
 #[derive(Debug, Deserialize)]
+// Query 인자의 구조체
+// Optional한 name을 입력으로 받는다.
 struct HelloParams { // query 사용을 위해 구조체 사용
     name: Option<String>,
 }
@@ -62,7 +68,7 @@ struct HelloParams { // query 사용을 위해 구조체 사용
 async fn handler_hello(Query(params): Query<HelloParams>) -> impl IntoResponse {
     println!("->> {:<12} - handler_hello - {params:?}", "HANDLER");
 
-    let name: &str = params.name.as_deref().unwrap_or("World!");
+    let name: &str = params.name.as_deref().unwrap_or("World!"); // 소유권이 있는 변수값을 참조값으로 변환
     Html(format!("Hello <strong>{name}</strong>")) // name이 없으면 "World!" 출력
 }
 
