@@ -1,5 +1,7 @@
 use std::net::SocketAddr;
 
+use crate::model::ModelController;
+
 pub use self::error::{Error, Result};
 
 use axum::{
@@ -17,11 +19,15 @@ mod web;
 
 // main 함수는 async를 붙일 수 없으나, tokio macro를 통해 사용 가능
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<()> {
+    // Initailize ModelController.
+    let mc = ModelController::new().await?;
+    
     // 라우터를 생성
     let routes_all: Router = Router::new()
         .merge(routes_hello()) // 라우터 병합으로, 여러 개의 라우터를 하나의 라우터로 병합해서 사용
         .merge(web::routes_login::routes()) // 외부 크레이트에서 로그인 하는 라우트 병합
+        .nest("/api", web::routes_tickets::routes(mc.clone()))
         .layer(middleware::map_response(main_response_mapper)) // middleware로 mapper를 두어서 응답 매핑
         .layer(CookieManagerLayer::new()) // 쿠키 매니저 사용
         .fallback_service(routes_static()); // 오류 발생 시 보여주는 정적 라우트
@@ -33,6 +39,8 @@ async fn main() {
         .serve(routes_all.into_make_service()) // 라우트를 사용
         .await
         .unwrap(); // Option, Result 내부 값을 가져옴
+
+    Ok(())
 }
 
 // 응답에 대한 매퍼
