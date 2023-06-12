@@ -1,5 +1,4 @@
 use async_trait::async_trait;
-use axum::RequestPartsExt;
 use axum::extract::{FromRequestParts, State};
 use axum::http::Request;
 use axum::http::request::Parts;

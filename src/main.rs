@@ -34,6 +34,10 @@ async fn main() -> Result<()> {
         .merge(web::routes_login::routes()) // 외부 크레이트에서 로그인 하는 라우트 병합
         .nest("/api", routes_apis)
         .layer(middleware::map_response(main_response_mapper)) // middleware로 mapper를 두어서 응답 매핑
+        .layer(middleware::from_fn_with_state(
+            mc.clone(),
+            web::mw_auth::mw_ctx_resolver, 
+        ))
         .layer(CookieManagerLayer::new()) // 쿠키 매니저 사용
         .fallback_service(routes_static()); // 오류 발생 시 보여주는 정적 라우트
 
