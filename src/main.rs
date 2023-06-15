@@ -15,14 +15,16 @@ use axum::{
     // 응답에 대한 의존성으로, Html을 렌더링. impl IntoResponse로 응답을 구현체로 적용
     response::{Html, IntoResponse, Response},
     // 요청을 받기 위해 Router를 사용하고, 요청에 대해 추적하기 위해서 Query, Path 임포트
-    Router, extract::{Query, Path}, middleware,
+    Router, extract::{Query, Path}, middleware, Json,
 };
 // 비식별화에 사용
 use serde::Deserialize;
+use serde_json::json;
 // 쿠키 매니저
 use tower_cookies::CookieManagerLayer;
 // TODO: 뭔지 모르겠음.
 use tower_http::services::ServeDir;
+use uuid::Uuid;
 
 mod ctx;
 mod error;
@@ -77,9 +79,33 @@ async fn main() -> Result<()> {
 // 그대로 소유권을 반환하기 때문에 인자로 소유권이 있는 Response 구조체를 인자로 사용
 async fn main_response_mapper(res: Response) -> Response {
     println!("->> {:<12} - main_response_mapper", "RES_MAPPER");
+    let uuid = Uuid::new_v4();
+
+    // -- Get the eventual response error.
+    let service_error = res.extensions().get::<Error>();
+    let client_status_error = service_error.map(|se| se.client_status_and_error());
+
+    // -- If client error, build the new response.
+    let error_response = client_status_error
+        .as_ref()
+        .map(|(status_code, client_error)| {
+            let client_error_body = json!({
+                "error": {
+                    "type": client_error.as_ref(),
+                    "req_uuid": uuid.to_string(),
+                }
+            });
+
+            println!("   ->> client_error_body: {client_error_body}");
+
+            // Build the new response from the client_error_body
+            (*status_code, Json(client_error_body)).into_response()
+        });
+
+    println!("   ->> server log line - {uuid} - Error: {error_response:?}");
 
     println!();
-    res
+    error_response.unwrap_or(res)
 }
 
 // fallback에 대하여 오류를 처리함
