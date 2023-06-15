@@ -2,7 +2,7 @@
 use std::net::SocketAddr;
 
 // model 외부 파일 크레이트에서 ModelController라는 구조체를 불러옴
-use crate::model::ModelController;
+use crate::{model::ModelController, log::log_request};
 
 // 커스텀 error, 현재 file에서 Error, Result를 public으로 설정
 // error module을 모두 가져와 main에 import하고 그 중에서 Error와 Result을 public으로 지정
@@ -15,8 +15,9 @@ use axum::{
     // 응답에 대한 의존성으로, Html을 렌더링. impl IntoResponse로 응답을 구현체로 적용
     response::{Html, IntoResponse, Response},
     // 요청을 받기 위해 Router를 사용하고, 요청에 대해 추적하기 위해서 Query, Path 임포트
-    Router, extract::{Query, Path}, middleware, Json,
+    Router, extract::{Query, Path}, middleware, Json, http::{Uri, Method},
 };
+use ctx::Ctx;
 // 비식별화에 사용
 use serde::Deserialize;
 use serde_json::json;
@@ -78,7 +79,12 @@ async fn main() -> Result<()> {
 // 응답에 대한 매퍼
 // Response를 인자로 받아서, print 후 Response 반환.
 // 그대로 소유권을 반환하기 때문에 인자로 소유권이 있는 Response 구조체를 인자로 사용
-async fn main_response_mapper(res: Response) -> Response {
+async fn main_response_mapper(
+    ctx: Option<Ctx>,
+    uri: Uri,
+    req_method: Method,
+    res: Response
+) -> Response {
     println!("->> {:<12} - main_response_mapper", "RES_MAPPER");
     let uuid = Uuid::new_v4();
 
@@ -103,7 +109,8 @@ async fn main_response_mapper(res: Response) -> Response {
             (*status_code, Json(client_error_body)).into_response()
         });
 
-    println!("   ->> server log line - {uuid} - Error: {error_response:?}");
+    let client_error = client_status_error.unzip().1;
+    log_request(uuid, req_method, uri, ctx, service_error, client_error).await;
 
     println!();
     error_response.unwrap_or(res)
