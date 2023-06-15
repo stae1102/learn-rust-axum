@@ -62,7 +62,7 @@ async fn main() -> Result<()> {
         .fallback_service(routes_static()); // 오류 발생 시 보여주는 정적 라우트
 
     // region:      --- Start Server
-    let addr: SocketAddr = SocketAddr::from(([127, 0, 0, 1], 8001)); // 127.0.0.1:8001에서 서버 구동할 수 있게 주소 열거체 생성
+    let addr: SocketAddr = SocketAddr::from(([127, 0, 0, 1], 8000)); // 127.0.0.1:8001에서 서버 구동할 수 있게 주소 열거체 생성
     println!("->> LISTENING on {addr}\n");
     axum::Server::bind(&addr)
         .serve(routes_all.into_make_service()) // 라우트를 사용
