@@ -1,12 +1,14 @@
 use axum::response::{IntoResponse, Response};
 use axum::http::StatusCode;
+use serde::Serialize;
 
 // 여기서 Result 타입을 정의하며, 이는 결과와 Error를 Result 열거체로 타입 별칭
 pub type Result<T> = core::result::Result<T, Error>;
 
 // Enum을 복사시킬 수 있게 해준다.
 // Rust에서는 직접적으로 상속을 지원하지 않고 트레이트를 통해 상속, 합성
-#[derive(Debug, Clone, strum_macros::AsRefStr)]
+#[derive(Debug, Clone, Serialize, strum_macros::AsRefStr)]
+#[serde(tag = "type", content = "data")]
 pub enum Error {
     LoginFail,
 
