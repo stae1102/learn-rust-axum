@@ -49,7 +49,7 @@ async fn main() -> Result<()> {
     let routes_all: Router = Router::new()
         .merge(routes_hello()) // 라우터 병합으로, 여러 개의 라우터를 하나의 라우터로 병합해서 사용
         .merge(web::routes_login::routes()) // 외부 크레이트에서 로그인 하는 라우트 병합
-        // apu 경로 자식 경로는 모두 routes_apis에서 처리
+        // api 경로 자식 경로는 모두 routes_apis에서 처리
         .nest("/api", routes_apis)
         .layer(middleware::map_response(main_response_mapper)) // middleware로 mapper를 두어서 응답 매핑
         // ModelController에의 Context를 추출하며 유효성을 검사함.

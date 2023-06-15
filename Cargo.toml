@@ -18,6 +18,8 @@ tower-cookies = "0.9.0"
 # Others
 lazy-regex = "2.5.0"
 async-trait = "0.1.68"
+strum_macros = "0.24.3"
+uuid = { version = "1.3.4", features = ["v4", "fast-rng"] }
 
 [dev-dependencies]
 anyhow = "1"
